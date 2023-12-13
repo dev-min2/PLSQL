@@ -287,3 +287,30 @@ END;
 /
 
 
+--집
+DECLARE
+    CURSOR emp_info_cursor IS
+        SELECT department_id, last_name, salary, (salary * 12 + (NVL(salary, 0) * NVL(commission_pct,0) * 12)) AS annualSal
+            FROM EMPLOYEES
+            WHERE department_id IN (50,80);
+            
+    emp_rec emp_info_cursor%ROWTYPE;
+BEGIN
+    OPEN emp_info_cursor;
+    
+    LOOP
+        FETCH emp_info_cursor INTO emp_rec;
+        EXIT WHEN emp_info_cursor%NOTFOUND;
+        
+        DBMS_OUTPUT.PUT(emp_rec.department_id || ', ');
+        DBMS_OUTPUT.PUT(emp_rec.last_name || ', ');
+        DBMS_OUTPUT.PUT(emp_rec.salary || ', ');
+        DBMS_OUTPUT.PUT_LINE(emp_rec.annualSal);
+        
+    END LOOP;
+    IF emp_info_cursor%ROWCOUNT = 0 THEN -- ENDLOOP를 만나 LOOP를 빠져나오면 ROWCOUNT는 고정이기에.
+        DBMS_OUTPUT.PUT_LINE('현재 커서의 데이터는 없습니다!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+    END IF;
+    CLOSE emp_info_cursor;
+END;
+/
