@@ -1,4 +1,4 @@
-SET SERVEROUTPUT ON
+SET SERVEROUTPUT ON;
 
 DECLARE
     CURSOR emp_cursor IS
@@ -409,7 +409,7 @@ END;
 EXECUTE TEST_PRO(9999);
 
 -- 프로시저 실습 3번
-CREATE PROCEDURE yedam_emp
+CREATE OR REPLACE PROCEDURE yedam_emp
 (p_eid IN NUMBER)
 IS
     v_ename employees.last_name%TYPE;
@@ -427,8 +427,8 @@ END;
 EXECUTE yedam_emp(176);
 
 -- 프로시저 4번
-CREATE PROCEDURE y_update
-(p_eid NUMBER, p_sal_inc_percent NUMBER)
+CREATE OR REPLACE PROCEDURE y_update
+(p_eid IN NUMBER, p_sal_inc_percent IN NUMBER)
 IS
     v_exception EXCEPTION;
 BEGIN
@@ -461,16 +461,30 @@ COMMIT;
 
 SELECT * FROM EMPLOYEES;
 -- 5-1번, 5-2번 
-create PROCEDURE y_proc
-(p_dept_id NUMBER)
+create or replace PROCEDURE y_proc
+(p_dept_id IN NUMBER)
 IS
-    CURSOR emp_cursor IS
+    CURSOR emp_cursor(dept_id NUMBER) IS
         SELECT *
             FROM employees 
-            WHERE department_id = p_dept_id;
+            WHERE department_id = dept_id;
+            
+    dept_rec departments.department_id%TYPE;
+    emp_rec emp_cursor%ROWTYPE;
+    emp_no_data_exection EXCEPTION;
 BEGIN
-    FOR emp_rec IN emp_cursor LOOP
-        IF emp_rec.hire_date < '2005-01-01' THEN
+    SELECT department_id
+            INTO dept_rec
+            FROM departments
+            WHERE department_id = p_dept_id;
+    
+    OPEN emp_cursor(p_dept_id);
+    
+    LOOP
+        FETCH emp_cursor INTO emp_rec;
+        EXIT WHEN emp_cursor%NOTFOUND;
+        
+        IF emp_rec.hire_date < TO_DATE('2005-01-01','yyyy-MM-dd') THEN
             INSERT INTO yedam01 values(
                 emp_rec.employee_id,
                 emp_rec.last_name
@@ -482,14 +496,27 @@ BEGIN
             );
         END IF;
     END LOOP;
+    
+    IF emp_cursor%ROWCOUNT = 0 THEN
+        RAISE emp_no_data_exection;
+    END IF;
+    
+    CLOSE emp_cursor;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('해당 부서가 없슴다');
+    WHEN emp_no_data_exection THEN
+        DBMS_OUTPUT.PUT_LINE('해당 부서에 사원이 없슴다');
+        CLOSE emp_cursor;
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('니가 뭘할수있는데?');
 END;
 /
+EXECUTE y_proc(150);
 
-EXECUTE y_proc(50);
     
 SELECT *
-    FROM EMPLOYEES
-    WHERE DEPARTMENT_ID = 50 AND HIRE_DATE < '2005-01-01';
-
+    FROM yedam02;
+    
 SELECT *
     FROM EMPLOYEES;

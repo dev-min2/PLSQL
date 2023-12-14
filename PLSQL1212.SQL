@@ -314,3 +314,7 @@ BEGIN
     CLOSE emp_info_cursor;
 END;
 /
+
+
+-- 기본 LOOP (명시적 커서와 궁합이 좋음)
+-- FOR LOOP
